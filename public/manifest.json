@@ -1,0 +1,17 @@
+{
+  "name": "100일 성경 읽기",
+  "short_name": "성경읽기",
+  "description": "50명이 함께하는 100일 성경 읽기 프로그램",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
