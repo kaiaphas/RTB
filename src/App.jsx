@@ -13,8 +13,28 @@ import {
   Home,
   Users,
   Lock,
-  Loader2
+  Loader2,
+  Cross,
+  Smartphone,
+  X,
+  Download,
+  Share2
 } from 'lucide-react';
+
+const CrossIcon = ({ className }) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="3.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <line x1="12" y1="3" x2="12" y2="21" />
+    <line x1="7" y1="9" x2="17" y2="9" />
+  </svg>
+);
 
 function App() {
   const [session, setSession] = useState(null);
@@ -23,6 +43,7 @@ function App() {
   const [allUserProgress, setAllUserProgress] = useState([]); // 모든 사용자 진도 데이터
   const [loading, setLoading] = useState(true);
   const [isViewerOpen, setIsViewerOpen] = useState(false);
+  const [isIconModalOpen, setIsIconModalOpen] = useState(false); // 앱 아이콘 생성 모달
   const [activeTab, setActiveTab] = useState('home'); // 'home' or 'status'
   const [isRecovering, setIsRecovering] = useState(false); // 비밀번호 재설정(복구) 모드 여부
   const [newPassword, setNewPassword] = useState('');
@@ -34,10 +55,11 @@ function App() {
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setSession(session);
+      console.log("Auth Event:", event);
       if (event === 'PASSWORD_RECOVERY') {
         setIsRecovering(true);
       }
+      setSession(session);
     });
 
     return () => subscription.unsubscribe();
@@ -192,7 +214,7 @@ function App() {
     <div className="min-h-screen flex items-center justify-center bg-slate-50">
       <div className="animate-pulse flex flex-col items-center">
         <div className="h-16 w-16 bg-blue-600 rounded-3xl mb-4 shadow-xl shadow-blue-100 flex items-center justify-center">
-          <BookOpen className="text-white w-8 h-8" />
+          <CrossIcon className="text-white w-8 h-8" />
         </div>
         <p className="text-slate-400 font-bold">말씀을 불러오는 중...</p>
       </div>
@@ -218,15 +240,24 @@ function App() {
       <header className="sticky top-0 bg-white/80 backdrop-blur-md border-b border-slate-100 px-6 py-5 flex items-center justify-between z-20">
         <div className="flex items-center gap-2">
           <div className="bg-blue-600 p-1.5 rounded-lg">
-            <BookOpen className="text-white w-5 h-5" />
+            <CrossIcon className="text-white w-5 h-5" />
           </div>
           <h1 className="text-xl font-black text-slate-900 tracking-tight">
             {activeTab === 'home' ? `${session.user.user_metadata?.nickname || '나'}의 읽기` : '읽기 현황'}
           </h1>
         </div>
-        <button onClick={() => supabase.auth.signOut()} className="bg-slate-50 p-2 rounded-xl text-slate-400 hover:text-red-500 transition-colors border border-slate-100">
-          <LogOut className="w-5 h-5" />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setIsIconModalOpen(true)}
+            className="bg-blue-50 p-2 rounded-xl text-blue-600 hover:bg-blue-100 transition-colors border border-blue-100 flex items-center gap-1.5"
+          >
+            <Smartphone className="w-5 h-5" />
+            <span className="text-xs font-black hidden sm:block">앱 설치</span>
+          </button>
+          <button onClick={() => supabase.auth.signOut()} className="bg-slate-50 p-2 rounded-xl text-slate-400 hover:text-red-500 transition-colors border border-slate-100">
+            <LogOut className="w-5 h-5" />
+          </button>
+        </div>
       </header>
 
       <main className="p-6 max-w-md mx-auto space-y-8 animate-in fade-in duration-500">
@@ -397,6 +428,81 @@ function App() {
           currentDay={currentDay}
           onClose={() => setIsViewerOpen(false)}
         />
+      )}
+
+      {/* [앱 아이콘 생성 가이드 모달] */}
+      {isIconModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 animate-in fade-in duration-300">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setIsIconModalOpen(false)}></div>
+          <div className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl relative overflow-hidden flex flex-col max-h-[80vh]">
+            <div className="p-8 pb-4 flex justify-between items-start">
+              <div>
+                <h2 className="text-2xl font-black text-slate-900">앱 아이콘 생성 안내</h2>
+                <p className="text-slate-400 font-bold text-sm mt-1">홈 화면에 바로가기를 추가하세요!</p>
+              </div>
+              <button
+                onClick={() => setIsIconModalOpen(false)}
+                className="bg-slate-100 p-2 rounded-full text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="p-8 pt-0 space-y-6 overflow-y-auto custom-scrollbar">
+              {/* 아이콘 미리보기 */}
+              <div className="bg-slate-50 rounded-3xl p-6 flex flex-col items-center gap-4 border-2 border-dashed border-slate-200">
+                <div className="w-20 h-20 bg-white rounded-2xl shadow-xl flex items-center justify-center overflow-hidden border border-slate-100">
+                  <img src="/apple-touch-icon.png" alt="App Icon" className="w-full h-full object-cover" />
+                </div>
+                <div className="text-center space-y-1">
+                  <p className="text-xs font-black text-slate-400 uppercase tracking-widest">생성된 심플 앱 아이콘</p>
+                  <p className="text-[10px] text-red-500 font-black">* 반드시 아래 전용 브라우저로 접속해야 합니다!</p>
+                </div>
+              </div>
+
+              {/* 가이드 - iPhone */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 text-blue-600">
+                  <span className="text-xl">🍎</span>
+                  <h3 className="font-black">아이폰(iOS) 가이드</h3>
+                </div>
+                <div className="bg-slate-50 rounded-2xl p-4 text-sm font-bold text-slate-600 leading-relaxed">
+                  <div className="mb-2 flex items-center gap-1.5 text-blue-700">
+                    <Check className="w-4 h-4" /> <span>사용 브라우저: **Safari(사파리)**</span>
+                  </div>
+                  1. 사파리 하단의 <span className="inline-block bg-white p-1 rounded-md border border-slate-200"><Share2 className="w-4 h-4 inline" /> 공유하기</span> 버튼을 누릅니다.<br />
+                  2. 메뉴를 내려 <span className="text-blue-600">"홈 화면에 추가"</span>를 선택합니다.<br />
+                  3. 우측 상단 **추가**를 누르면 끝!
+                </div>
+              </div>
+
+              {/* 가이드 - Android */}
+              <div className="space-y-3 pt-2">
+                <div className="flex items-center gap-2 text-green-600">
+                  <span className="text-xl">🤖</span>
+                  <h3 className="font-black">안드로이드 가이드</h3>
+                </div>
+                <div className="bg-slate-50 rounded-2xl p-4 text-sm font-bold text-slate-600 leading-relaxed">
+                  <div className="mb-2 flex items-center gap-1.5 text-green-700">
+                    <Check className="w-4 h-4" /> <span>사용 브라우저: **Chrome(크롬)**</span>
+                  </div>
+                  1. 크롬 우측 상단 <span className="inline-block bg-white p-1 rounded-md border border-slate-200">⋮</span> 버튼을 누릅니다.<br />
+                  2. <span className="text-green-600">"앱 설치"</span> 또는 <span className="text-green-600">"홈 화면에 추가"</span>를 선택합니다.<br />
+                  3. 확인을 누르면 바탕화면에 생성됩니다.
+                </div>
+              </div>
+            </div>
+
+            <div className="p-8 pt-4 bg-slate-50/50">
+              <button
+                onClick={() => setIsIconModalOpen(false)}
+                className="w-full bg-slate-900 hover:bg-black text-white font-black py-4 rounded-2xl transition-all shadow-xl"
+              >
+                확인했습니다
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

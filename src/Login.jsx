@@ -1,6 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
 import { LogIn, Mail, Lock, Loader2, User, UserPlus } from 'lucide-react';
+
+const CrossIcon = ({ className }) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="3.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <line x1="12" y1="3" x2="12" y2="21" />
+    <line x1="7" y1="9" x2="17" y2="9" />
+  </svg>
+);
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -12,18 +27,31 @@ const Login = () => {
   const [error, setError] = useState(null);
   const [message, setMessage] = useState(null);
 
+  // 마지막으로 로그인한 이메일 불러오기
+  useEffect(() => {
+    const savedEmail = localStorage.getItem('last_login_email');
+    if (savedEmail && !isSignUp && !isForgotPassword) {
+      setEmail(savedEmail);
+    }
+  }, [isSignUp, isForgotPassword]);
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
     setMessage(null);
-    
+
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    if (error) setError(error.message);
+    if (error) {
+      setError(error.message);
+    } else {
+      // 로그인 성공 시 이메일 저장
+      localStorage.setItem('last_login_email', email);
+    }
     setLoading(false);
   };
 
@@ -74,15 +102,15 @@ const Login = () => {
       <div className="w-full max-w-md bg-white rounded-[2.5rem] shadow-2xl p-8 space-y-8 animate-in fade-in zoom-in duration-500">
         <div className="text-center">
           <div className="bg-blue-600 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-blue-200">
-            {isForgotPassword ? <Lock className="text-white w-8 h-8" /> : 
-             isSignUp ? <UserPlus className="text-white w-8 h-8" /> : <LogIn className="text-white w-8 h-8" />}
+            {isForgotPassword ? <Lock className="text-white w-8 h-8" /> :
+              isSignUp ? <UserPlus className="text-white w-8 h-8" /> : <CrossIcon className="text-white w-8 h-8" />}
           </div>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight">
             {isForgotPassword ? '비밀번호 재설정' : isSignUp ? '새로운 시작' : '100일 성경 읽기'}
           </h1>
           <p className="text-slate-400 mt-2 font-medium">
-            {isForgotPassword ? '가입하신 이메일을 입력해주세요' : 
-             isSignUp ? '성경 완독의 여정을 시작해보세요' : '오늘도 말씀과 함께 시작해요!'}
+            {isForgotPassword ? '가입하신 이메일을 입력해주세요' :
+              isSignUp ? '성경 완독의 여정을 시작해보세요' : '오늘도 말씀과 함께 시작해요!'}
           </p>
         </div>
 
@@ -98,10 +126,11 @@ const Login = () => {
                   value={nickname}
                   onChange={(e) => setNickname(e.target.value)}
                   required
+                  autoComplete="nickname"
                 />
               </div>
               <p className="text-xs text-blue-600 font-bold px-4 flex items-center gap-1">
-                <span>⚠️</span> 현황판 표시를 위해 **닉네임**을 입력해주세요!
+                <span>⚠️</span> 현황판 표시를 위해 **닉네임**을 입력해주세요! 실명을 추천합니다!
               </p>
             </div>
           )}
@@ -115,6 +144,7 @@ const Login = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              autoComplete="username"
             />
           </div>
 
@@ -128,6 +158,7 @@ const Login = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                autoComplete={isSignUp ? "new-password" : "current-password"}
               />
             </div>
           )}
@@ -149,14 +180,14 @@ const Login = () => {
             disabled={loading}
             className="w-full bg-slate-900 hover:bg-black text-white font-black py-4 rounded-2xl transition-all shadow-xl active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
           >
-            {loading ? <Loader2 className="animate-spin" /> : 
-             (isForgotPassword ? '재설정 링크 보내기' : isSignUp ? '계정 만들기' : '로그인')}
+            {loading ? <Loader2 className="animate-spin" /> :
+              (isForgotPassword ? '재설정 링크 보내기' : isSignUp ? '계정 만들기' : '로그인')}
           </button>
         </form>
 
         {!isForgotPassword && !isSignUp && (
           <div className="text-center">
-            <button 
+            <button
               onClick={() => {
                 setIsForgotPassword(true);
                 setError(null);
@@ -189,10 +220,9 @@ const Login = () => {
           {isForgotPassword ? '로그인으로 돌아가기' : isSignUp ? '이미 계정 있으신가요? 로그인' : '처음이신가요? 계정 만들기'}
         </button>
       </div>
-      
+
       <p className="mt-8 text-slate-300 text-xs font-bold tracking-widest leading-relaxed text-center">
-        성서공회 개역한글판 성경을 사용합니다.<br/>
-        © 2026 RTB BIBLE PROJECT
+        © 2026 청운교회 고등부
       </p>
     </div>
   );
